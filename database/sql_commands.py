@@ -15,13 +15,20 @@ class Database:
         self.connection.execute(sql_queries.CREATE_BAN_USER_TABLE_QUERY)
         self.connection.execute(sql_queries.CREATE_USER_FORM_TABLE_QUERY)
         self.connection.execute(sql_queries.CREATE_LIKE_TABLE_QUERY)
+        self.connection.execute(sql_queries.CREATE_REFERRAL_TABLE_QUERY)
+
+        try:
+            self.connection.execute(sql_queries.ALTER_USER_TABLE)
+            self.connection.execute(sql_queries.ALTER_USER_V2_TABLE)
+        except sqlite3.OperationalError:
+            pass
 
         self.connection.commit()
 
     def sql_insert_users(self, telegram_id, username, first_name, last_name):
         self.cursor.execute(
             sql_queries.INSERT_USER_QUERY,
-            (None, telegram_id, username, first_name, last_name)
+            (None, telegram_id, username, first_name, last_name, None, None,)
         )
         self.connection.commit()
 
@@ -111,3 +118,53 @@ class Database:
             sql_queries.FILTER_LEFT_JOIN_USER_FORM_LIKE_QUERY,
             (tg_id, tg_id,)
         ).fetchall()
+
+    def sql_select_balance_count_referral(self, tg_id):
+        self.cursor.row_factory = lambda cursor, row: {
+            "balance": row[0],
+            "count": row[1],
+        }
+        return self.cursor.execute(
+            sql_queries.DOUBLE_SELECT_REFERRAL_USER_QUERY,
+            (tg_id,)
+        ).fetchone()
+
+    def sql_update_reference_link(self, link, owner):
+        self.cursor.execute(
+            sql_queries.UPDATE_REFERENCE_LINK_QUERY,
+            (link, owner,)
+        )
+        self.connection.commit()
+
+    def sql_select_user(self, telegram_id):
+        self.cursor.row_factory = lambda cursor, row: {
+            "link": row[0],
+        }
+        return self.cursor.execute(
+            sql_queries.SELECT_USER_LINK_QUERY,
+            (telegram_id,)
+        ).fetchone()
+
+    def sql_select_user_by_link(self, link):
+        self.cursor.row_factory = lambda cursor, row: {
+            "tg_id": row[0],
+        }
+        return self.cursor.execute(
+            sql_queries.SELECT_USER_BY_LINK_QUERY,
+            (link,)
+        ).fetchone()
+
+    def sql_update_balance(self, tg_id):
+        print(tg_id)
+        self.cursor.execute(
+            sql_queries.UPDATE_USER_BALANCE_QUERY,
+            (tg_id,)
+        )
+        self.connection.commit()
+
+    def sql_insert_referral(self, owner, referral):
+        self.cursor.execute(
+            sql_queries.INSERT_REFERRAL_QUERY,
+            (None, owner, referral,)
+        )
+        self.connection.commit()
