@@ -1,10 +1,12 @@
+import asyncio
 import sqlite3
 
 from aiogram import types, Dispatcher
 from config import bot, ADMIN_ID
 from database.sql_commands import Database
 from keyboards.inline_buttons import questionnaire_keyboard
-from scraping.news_scraper import NewsScraper
+# from scraping.async_news import AsyncNewsScraper
+# from scraping.news_scraper import NewsScraper
 
 
 async def start_questionnaire_call(call: types.CallbackQuery):
@@ -45,14 +47,14 @@ async def admin_call(message: types.Message):
         )
 
 
-async def scraper_call(call: types.CallbackQuery):
-    scraper = NewsScraper()
-    data = scraper.parse_data()
-    for url in data[:4]:
-        await bot.send_message(
-            chat_id=call.from_user.id,
-            text=f"{scraper.PLUS_URL + url}"
-        )
+# async def scraper_call(call: types.CallbackQuery):
+#     scraper = AsyncNewsScraper()
+#     data = await scraper.parse_pages()
+#     for url in data[:4]:
+#         await bot.send_message(
+#             chat_id=call.from_user.id,
+#             text=f"{scraper.PLUS_URL + url}"
+#         )
 
 
 def register_callback_handlers(dp: Dispatcher):
@@ -64,5 +66,5 @@ def register_callback_handlers(dp: Dispatcher):
                                        lambda call: call.data == "mojo")
     dp.register_message_handler(admin_call,
                                 lambda word: "dorei" in word.text)
-    dp.register_callback_query_handler(scraper_call,
-                                       lambda call: call.data == "news")
+    # dp.register_callback_query_handler(scraper_call,
+    #                                    lambda call: call.data == "news")
